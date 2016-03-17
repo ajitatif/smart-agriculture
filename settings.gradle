@@ -1,1 +1,4 @@
-rootProject.name = "smart-agriculture"
+//rootProject.name = "smart-agriculture"
+
+include 'smart-agriculture-core'
+
