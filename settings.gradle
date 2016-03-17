@@ -1,4 +1,5 @@
 //rootProject.name = "smart-agriculture"
 
 include 'smart-agriculture-core'
+include 'smart-agriculture-main'
 
