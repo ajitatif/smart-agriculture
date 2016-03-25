@@ -14,5 +14,8 @@ public class EventActionHandler {
         return actionConditions.add(condition);
     }
 
+    public Action getActionForEvent(Event event) {
+        return new Action();
+    }
 
 }

@@ -4,15 +4,15 @@ Feature: Act on a detected event
   for specific events.
 
   Scenario Outline: Detected event triggers an action.
-    Given EventActionHandler has an ActionCondition with EventSource of <source> ActionThreshold of <threshold> Action of "watering start"
-    And   an ActionCondition with EventSource of <source> ActionThreshold of <threshold> Action of "watering stop"
-    When Event type of <type> is detected with value of <value>
+    Given EventActionHandler has an ActionCondition with EventSource of Humidity, ActionThreshold of <thresholdStart> Action Command of watering start
+    And an ActionCondition with EventSource of Humidity, ActionThreshold of <thresholdStop> Action Command of watering stop
+    When Event type of "<type>" is detected with value of <value>
     Then The action command should be <command>
 
     Examples:
-    | source    | threshold | type        | value | command          |
-    | Humidity  | "<=0.1"    | Humidity   | 0.5   | watering stop    |
-    | Humidity  | "<=0.1"    | Humidity   | 0.1   | warering start   |
-    | Humidity  | "<=0.1"    | Humidity   | 0.09  | watering start   |
-    | Humidity  | "<=0.1"    | Temperature| -1.2  | watering stop    |
-    | Humidity  | "<=0.1"    | Temperature| 12    | watering stop    |
+    | thresholdStart    | thresholdStop | type        | value | command          |
+    | "<=0.1"           | ">0.1"        | HUMIDITY    | 0.5   | watering stop    |
+    | "<=0.1"           | ">0.1"        | HUMIDITY    | 0.1   | watering start   |
+    | "<=0.1"           | ">0.1"        | HUMIDITY    | 0.09  | watering start   |
+    | "<=0.1"           | ">0.1"        | TEMPERATURE | -1.2  | watering stop    |
+    | "<=0.1"           | ">0.1"        | TEMPERATURE | 12    | watering stop    |
