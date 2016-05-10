@@ -3,6 +3,7 @@ package org.turkisi.smartagriculture.event;
 /**
  * @author Gökalp Gürbüzer (gokalp.gurbuzer@yandex.com)
  */
-public enum EventSource {
-    HUMIDITY, TEMPERATURE
+public interface EventListener {
+
+    void onEvent(Event event);
 }

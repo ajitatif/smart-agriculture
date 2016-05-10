@@ -31,4 +31,13 @@ public class ActionCondition {
     public void setAction(Action action) {
         this.action = action;
     }
+
+    public ActionCondition() {
+    }
+
+    public ActionCondition(String source, String actionCondition, Action action) {
+        this.source = EventSource.valueOf(source);
+        this.actionCondition = actionCondition;
+        this.action = action;
+    }
 }
