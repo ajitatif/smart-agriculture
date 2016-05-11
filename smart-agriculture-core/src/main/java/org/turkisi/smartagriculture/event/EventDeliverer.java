@@ -23,12 +23,13 @@ public class EventDeliverer implements Runnable {
 
     @Override
     public void run() {
+        List<String> queueIds = daemonQueueService.getEventQueueIds();
+        for (String queueId : queueIds) {
+            Set<EventListener> eventListeners = eventListenerMap.get(queueId);
+            new Thread(new EventDeliveryRunnable(daemonQueueService.getEventQueue(queueId), eventListeners)).start();
+        }
         while (run) {
-            List<String> queueIds = daemonQueueService.getEventQueueIds();
-            for (String queueId : queueIds) {
-                Set<EventListener> eventListeners = eventListenerMap.get(queueId);
-                new Thread(new EventDeliveryRunnable(daemonQueueService.getEventQueue(queueId), eventListeners)).start();
-            }
+
         }
     }
 
@@ -41,5 +42,9 @@ public class EventDeliverer implements Runnable {
             eventListenerMap.put(queueId, new HashSet<EventListener>());
         }
         eventListenerMap.get(queueId).add(eventListener);
+    }
+
+    public synchronized void unregisterEventListener(String queueId, EventListener eventListener) {
+        eventListenerMap.get(queueId).remove(eventListener);
     }
 }

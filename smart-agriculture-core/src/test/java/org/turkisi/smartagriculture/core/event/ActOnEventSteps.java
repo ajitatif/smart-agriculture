@@ -1,13 +1,15 @@
 package org.turkisi.smartagriculture.core.event;
 
+import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import org.junit.AfterClass;
 import org.turkisi.smartagriculture.ServiceRegistry;
-import org.turkisi.smartagriculture.daemon.DaemonQueue;
 import org.turkisi.smartagriculture.daemon.DaemonQueueService;
 import org.turkisi.smartagriculture.event.*;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -21,19 +23,45 @@ public class ActOnEventSteps {
 
     private EventActionHandler eventActionHandler;
     private EventDispatcher eventDispatcher;
-    private DaemonQueue queue;
+    private final TestDaemonResultRegister resultRegister = new TestDaemonResultRegister();
+    private TestDaemon testDaemon = new TestDaemon(this);
+    private EventDeliverer eventDeliverer = new EventDeliverer();
+
+    TestDaemonResultRegister getResultRegister() {
+        return resultRegister;
+    }
 
     public ActOnEventSteps() {
         eventActionHandler = new EventActionHandler();
         eventDispatcher = new EventDispatcher();
         DaemonQueueService daemonQueueService = ServiceRegistry.getDaemonQueueService();
         daemonQueueService.createEventQueue("watering");
-        queue = daemonQueueService.getEventQueue("watering");
+        eventActionHandler.addActionModule(testDaemon);
+        eventDeliverer.registerEventListener("watering", eventActionHandler);
+        new Thread(eventDeliverer).start();
     }
 
-    @Given("^EventActionHandler has following AlarmCondition data$")
-    public void eventactionhandler_has_following_AlarmCondition_data(List<ActionCondition> arg1) throws Throwable {
-        for (ActionCondition actionCondition : arg1) {
+    @After
+    public void tearDown() {
+        eventDeliverer.shutdown();
+    }
+
+    @Given("^EventActionHandler has following ActionConditionMedium data$")
+    public void eventactionhandler_has_following_AlarmCondition_data(List<ActionConditionMedium> arg1) throws Throwable {
+        for (ActionConditionMedium medium : arg1) {
+            ActionCondition actionCondition = new ActionCondition();
+            actionCondition.setSource(medium.getSource());
+            actionCondition.setActionCondition(medium.getActionCondition());
+            Action action = new Action();
+            String[] split = medium.getAction().split(" ");
+            action.setDaemon(split[0]);
+            action.setCommand(split[1]);
+            if (split.length > 2) {
+                action.setArgs(Arrays.copyOfRange(split, 3, split.length));
+            } else {
+                action.setArgs(new String[0]);
+            }
+            actionCondition.setAction(action);
             eventActionHandler.addActionCondition(actionCondition);
         }
     }
@@ -49,6 +77,13 @@ public class ActOnEventSteps {
 
     @Then("^The action command should be \"([^\"]*)\"$")
     public void theActionCommandShouldBe(String arg0) throws Throwable {
-        assertThat(queue.poll().getCommand(), equalTo(arg0));
+        if (resultRegister.getCommand() == null) {
+            synchronized (resultRegister) {
+                if (resultRegister.getCommand() == null) {
+                    resultRegister.wait();
+                }
+            }
+        }
+        assertThat(resultRegister.getCommand(), equalTo(arg0));
     }
 }
